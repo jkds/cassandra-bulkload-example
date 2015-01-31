@@ -10,3 +10,9 @@ data/
 # IntelliJ
 *.iml
 *.idea/
+/bin/
+tmpdata
+
+# Mac OS metafiles
+.DS_Store
+
