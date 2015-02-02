@@ -1,45 +1,31 @@
 apply plugin: 'java'
-apply plugin: 'application'
-
-mainClassName = "bulkload.Loader"
 
 sourceCompatibility = 1.7
 version = '1.0'
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
 dependencies {
-    compile files('lib/apache-cassandra-2.0.11-SNAPSHOT-8619-patched.jar')
-    compile ('org.apache.cassandra:cassandra-all:2.0.11')
+    compile group: 'org.apache.cassandra', name: 'cassandra-all', version: '2.0.12-SNAPSHOT'
     compile group: 'log4j', name: 'log4j', version: '1.2.17'
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
 
-//task fatJar(type: Jar) {
-//    baseName = project.name + '-all'
-//    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-//    with jar
-//    manifest {
-//        attributes 'Implementation-Title': 'Loader', 'Implementation-Version': version
-//        attributes 'Main-Class': 'bulkload.Loader'
-//    }
-//}
 
-configurations {
-    all*.filter { it.name.contains('cassandra-all') == false }
-}
-
-task distLoader(type: Zip) {
-    description = 'Custom zip archive which includes the main patched Cassandra jar '
-    // Make sure you give this distribution a name that indicates that it is not the standard distribution
-    archiveName = "custom-${project.name}.zip"
-    into('bin') { from startScripts }
-    into('lib') {
-        from jar
-        from configurations.runtime.filter { it.name.contains("cassandra-all") != true }
+task fatJar(type: Jar) {
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+    manifest {
+        attributes 'Implementation-Title': 'Loader', 'Implementation-Version': version
+        attributes 'Main-Class': 'bulkload.Loader'
     }
 }
 
+task run(type:JavaExec) {
+    main = 'bulkload.Loader'
+    classpath = sourceSets.main.runtimeClasspath
+    args 'data/input/'
+}
