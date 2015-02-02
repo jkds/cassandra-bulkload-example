@@ -17,14 +17,14 @@ import java.util.List;
  */
 public class Loader {
 
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(Loader.class);
+
     /**
      * Default output directory
      */
     public static final String DEFAULT_OUTPUT_DIR = "./data";
     static String filename;
     static String csv_dir_location;
-
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(Loader.class);
 
     /**
      * Keyspace name
@@ -70,14 +70,12 @@ public class Loader {
 
         File[] files = new File(csv_dir_location).listFiles(new FileFilter() {
             public boolean accept(File file) {
-                return file.getName().endsWith(".csv");
+                return file.getName().endsWith(".csv") && file.isFile();
             }
         });
 
         for (File file : files) {
-            if (file.isFile()) {
-                results.add(file.getAbsolutePath());
-            }
+             results.add(file.getAbsolutePath());
         }
         return results;
     }
@@ -115,6 +113,8 @@ public class Loader {
                 .forTable(SCHEMA)
                         // set CQL statement to put data
                 .using(INSERT_STMT)
+
+                .withBufferSizeInMB(128)
                         // set partitioner if needed
                         // default is Murmur3Partitioner so set if you use different one.
                 .withPartitioner(new Murmur3Partitioner());
@@ -127,7 +127,7 @@ public class Loader {
             filename = list.get(i).toString();
             log.debug("Processing file {} " + filename);
             try (BufferedReader reader = new BufferedReader(new FileReader(filename));
-                 CsvListReader csvReader = new CsvListReader(reader, CsvPreference.STANDARD_PREFERENCE)) {
+                CsvListReader csvReader = new CsvListReader(reader, CsvPreference.STANDARD_PREFERENCE)) {
                 CQLSSTableWriter writer = builder.build();
                 csvReader.getHeader(false);
                 // Write to SSTable while reading data
@@ -137,7 +137,7 @@ public class Loader {
                     if (line.size() == 10) {
                         writer.addRow(line.toArray(new Object[]{line.size()}));
                         noOfLines++;
-                        if (noOfLines % 10000 == 0) {
+                        if (noOfLines % 100000 == 0) {
                             log.debug("File {}, {} lines written", filename, noOfLines);
                         }
                     } else {
@@ -152,7 +152,7 @@ public class Loader {
 
         }//for loop
 
-        log.info("Written sstables files in {} seconds", (System.currentTimeMillis()-start/1000));
+        log.info("Written sstables files in {} seconds", ((System.currentTimeMillis()-start)/1000));
 
     }
 
