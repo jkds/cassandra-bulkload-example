@@ -1,15 +1,44 @@
+
 # cassandra-bulkload-example
 
-Sample SSTable generating and bulk loading code for DataStax [Using Cassandra Bulk Loader, Updated](http://www.datastax.com/dev/blog/using-the-cassandra-bulk-loader-updated) blog post.
-This fetches historical prices from [Yahoo! Finance](http://finance.yahoo.com/) in CSV format, and turn them to SSTables.
+Sample code which will take input from provided CSV files and export them into SSTable files
+This code includes a patched Cassandra jar based on 2.0.11 containing the fix from:
 
-## Generating SSTables
+[Using CQLSSTableWriter gives ConcurrentModificationException](https://issues.apache.org/jira/browse/CASSANDRA-8619)
 
-Run:
+Follows the steps below to get up and running...
 
-    $ ./gradlew run
+----
 
-This will generate SSTable(s) under `data` directory.
+## Creating a distribution
+
+Create a distribution:
+
+    $ ./gradlew distLoader
+
+This produces a zip file under ./build/distributions called `custom-cassandra-bulkload-example.zip`
+
+## Installing the application
+
+Copy the zip file from the previous step to the desired location and unzip it
+
+    $ unzip custom-cassandra-bulkload-example.zip -d {target-dir}
+
+This produces the following structure in the target directory
+
+    bin/
+    lib/
+    
+
+## Executing the application
+
+From the base directory run the following command:
+
+    ./bin/cassandra-bulkload-example {input-data-directory}
+    
+Supplying the directory where your CSV files are stored as the argument.
+Files will then be processed and output under `./data/..`
+
 
 ## Bulk loading
 
@@ -19,11 +48,14 @@ First, create schema using `schema.cql` file:
 
 Then, load SSTables to Cassandra using `sstableloader`:
 
-    $ sstableloader -d <ip address of the node> data/quote/historical_prices
+    $ sstableloader -d <ip address of the node> data/{path-to-output}
 
 (assuming you have `cqlsh` and `sstableloader` in your `$PATH`)
 
 ## Check loaded data
+
+#### Note:
+The following is based on the original schema posted by Yuki. Yours will probably be different...
 
 
     $ bin/cqlsh
