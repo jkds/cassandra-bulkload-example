@@ -5,7 +5,7 @@
 build/
 
 # data
-data/
+# data/
 
 # IntelliJ
 *.iml
